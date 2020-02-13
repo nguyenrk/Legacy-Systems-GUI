@@ -18,10 +18,13 @@ from tkinter import ttk
 from tkinter import Entry
 from tkinter import scrolledtext
 from subprocess import Popen, PIPE
+import tkinter as tk
+import tkinter.filedialog
 import multiprocessing
 import threading
 import time
 import logging
+import os
 
 
 EXIT_MESSAGE = 'Goodbye.'
@@ -39,7 +42,8 @@ SETTINGS
 {}
 Behavior Model: {}'''
 cmd = ' '
-
+global clearIO
+global sampleValue
 class Interface:
     @staticmethod
     def build_signal_clock(sample_rate, force_sample_rate=False): #Sample rate, duty cycle, 
@@ -181,6 +185,11 @@ class IO: #Input output interface
 
         print('{}{} configured: {}'.format(self.abbrev, self.index, self.status()))
 
+    def disable(self):
+        self.mode = 'disabled'
+        self.config_disable()
+        print('{}{} configured: {}'.format(self.abbrev, self.index, self.status()))
+
     def config_enable(self):
         raise NotImplementedError('Not implemented in abstract class')
 
@@ -264,6 +273,311 @@ def populate_behavior_model_signals(environment, model, *args):
                 break
 
 #Names seem explanatory. Can adjust each command individually
+class Clear(Frame):
+    def create_widgets(self):
+
+        self.config_button_1 = Button(self)
+        self.config_button_2 = Button(self)
+        self.config_button_3 = Button(self)
+        self.config_button_4 = Button(self)
+        self.config_button_5 = Button(self)
+
+        self.config_button_1['text'] = 'CONFIG0'
+        self.config_button_1['fg'] = 'green'
+        self.config_button_1['command'] = self.config1
+        self.config_button_1.pack({'side': 'left'})
+
+        self.config_button_2['text'] = 'CONFIG1'
+        self.config_button_2['fg'] = 'green'
+        self.config_button_2['command'] = self.config2
+        self.config_button_2.pack({'side': 'left'})
+
+        self.config_button_3['text'] = 'CONFIG2'
+        self.config_button_3['fg'] = 'green'
+        self.config_button_3['command'] = self.config3
+        self.config_button_3.pack({'side': 'left'})
+
+        self.config_button_4['text'] = 'CONFIG3'
+        self.config_button_4['fg'] = 'green'
+        self.config_button_4['command'] = self.config4
+        self.config_button_4.pack({'side': 'left'})
+
+        self.config_button_5['text'] = 'CONFIG4'
+        self.config_button_5['fg'] = 'green'
+        self.config_button_5['command'] = self.config4
+        self.config_button_5.pack({'side': 'left'})
+
+    def config1(self):
+        global clearIO
+        print('clear I0')
+        clearIO = 'I0'
+        env.clear('')
+        
+    def config2(self):
+        global clearIO
+        print('clear I1')
+        clearIO = 'I1'
+        env.clear('')
+
+    def config3(self):
+        global clearIO
+        print('clear I2')
+        clearIO = 'I2'
+        env.clear('')
+
+    def config4(self):
+        global clearIO
+        print('clear I3')
+        clearIO = 'I3'
+        env.clear('')
+
+    def config5(self):
+        global clearIO
+        print('clear I4')
+        clearIO = 'I4'
+        env.clear('')
+
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.config_button = None
+        self.pack()
+        self.create_widgets()
+        self.poll()
+
+    def poll(self):
+        """
+        This method is required to allow the mainloop to receive keyboard
+        interrupts when the frame does not have the focus
+        """
+        self.master.after(250, self.poll)
+
+
+class Copy1(Frame):
+
+    def create_widgets(self):
+        copyInput = 'I0'
+        toInput = 'I0'
+        self.config_button_1 = Button(self)
+        self.config_button_2 = Button(self)
+        self.config_button_3 = Button(self)
+        self.config_button_4 = Button(self)
+        self.config_button_5 = Button(self)
+
+        self.config_button_1['text'] = 'CONFIG0'
+        self.config_button_1['fg'] = 'green'
+        self.config_button_1['command'] = self.config1
+        self.config_button_1.pack(side=LEFT)
+
+        self.config_button_2['text'] = 'CONFIG1'
+        self.config_button_2['fg'] = 'green'
+        self.config_button_2['command'] = self.config2
+        self.config_button_2.pack({'side': 'left'})
+
+        self.config_button_3['text'] = 'CONFIG2'
+        self.config_button_3['fg'] = 'green'
+        self.config_button_3['command'] = self.config3
+        self.config_button_3.pack({'side': 'left'})
+
+        self.config_button_4['text'] = 'CONFIG3'
+        self.config_button_4['fg'] = 'green'
+        self.config_button_4['command'] = self.config4
+        self.config_button_4.pack({'side': 'left'})
+
+        self.config_button_5['text'] = 'CONFIG4'
+        self.config_button_5['fg'] = 'green'
+        self.config_button_5['command'] = self.config5
+        self.config_button_5.pack({'side': 'left'})
+
+        self.config_button_6 = Button(self)
+        self.config_button_7 = Button(self)
+        self.config_button_8 = Button(self)
+        self.config_button_9 = Button(self)
+        self.config_button_10 = Button(self)
+
+        self.config_button_6['text'] = 'CONFIG0_TO'
+        self.config_button_6['fg'] = 'green'
+        self.config_button_6['command'] = self.config6
+        self.config_button_6.pack()
+
+        self.config_button_7['text'] = 'CONFIG1_TO'
+        self.config_button_7['fg'] = 'green'
+        self.config_button_7['command'] = self.config7
+        self.config_button_7.pack()
+
+        self.config_button_8['text'] = 'CONFIG2_TO'
+        self.config_button_8['fg'] = 'green'
+        self.config_button_8['command'] = self.config8
+        self.config_button_8.pack()
+
+        self.config_button_9['text'] = 'CONFIG3_TO'
+        self.config_button_9['fg'] = 'green'
+        self.config_button_9['command'] = self.config9
+        self.config_button_9.pack()
+
+        self.config_button_10['text'] = 'CONFIG4_TO'
+        self.config_button_10['fg'] = 'green'
+        self.config_button_10['command'] = self.config10
+        self.config_button_10.pack()
+
+        self.copy = Button(self)
+        self.copy['text'] = 'COPY'
+        self.copy['fg'] = 'red'
+        self.copy['command'] = self.copyit
+        self.copy.pack({'side': 'left'})
+
+    def config1(self):
+        global copyInput
+        print('I0')
+        copyInput = 'I0'
+        
+        
+    def config2(self):
+        global copyInput
+        print('I1')
+        copyInput = 'I1'
+        
+
+    def config3(self):
+        global copyInput
+        print('I2')
+        copyInput = 'I2'
+        
+
+    def config4(self):
+        global copyInput
+        print('I3')
+        copyInput = 'I3'
+        
+
+    def config5(self):
+        global copyInput
+        print('I4')
+        copyInput = 'I4'
+
+    def config6(self):
+        global toInput
+        print('I0')
+        toInput = 'I0'
+        
+        
+    def config7(self):
+        global toInput
+        print('I1')
+        toInput = 'I1'
+        
+
+    def config8(self):
+        global toInput
+        print('I2')
+        toInput = 'I2'
+        
+
+    def config9(self):
+        global toInput
+        print('I3')
+        toInput = 'I3'
+        
+
+    def config10(self):
+        global toInput
+        print('I4')
+        toInput = 'I4'
+
+    def copyit(self):
+        global toInput
+        global copyInput
+        print('copy ' + copyInput + ' to ' +toInput)
+        env.copy([copyInput, toInput])
+        
+
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.config_button = None
+        self.pack()
+        self.create_widgets()
+        self.poll()
+
+    def poll(self):
+        """
+        This method is required to allow the mainloop to receive keyboard
+        interrupts when the frame does not have the focus
+        """
+        self.master.after(250, self.poll)
+
+class Disable(Frame):
+    def create_widgets(self):
+        self.config_button_1 = Button(self)
+        self.config_button_2 = Button(self)
+        self.config_button_3 = Button(self)
+        self.config_button_4 = Button(self)
+        self.config_button_5 = Button(self)
+
+        self.config_button_1['text'] = 'I0'
+        self.config_button_1['fg'] = 'green'
+        self.config_button_1['command'] = self.I0
+        self.config_button_1.pack({'side': 'left'})
+
+        self.config_button_2['text'] = 'I1'
+        self.config_button_2['fg'] = 'green'
+        self.config_button_2['command'] = self.I1
+        self.config_button_2.pack({'side': 'left'})
+
+        self.config_button_3['text'] = 'I2'
+        self.config_button_3['fg'] = 'green'
+        self.config_button_3['command'] = self.I2
+        self.config_button_3.pack({'side': 'left'})
+
+        self.config_button_4['text'] = 'I3'
+        self.config_button_4['fg'] = 'green'
+        self.config_button_4['command'] = self.I3
+        self.config_button_4.pack({'side': 'left'})
+
+        self.config_button_5['text'] = 'I4'
+        self.config_button_5['fg'] = 'green'
+        self.config_button_5['command'] = self.I4
+        self.config_button_5.pack({'side': 'left'})
+
+
+    def I0(self):
+        print('I0')
+        global disableInput
+        disableInput = 'I0'
+        env.disable('I0')
+    def I1(self):
+        print('I1')
+        global disableInput
+        disableInput = 'I1'
+        env.disable('I0')
+    def I2(self):
+        print('I2')
+        global disableInput
+        disableInput = 'I2'
+        env.disable('I0')
+    def I3(self):
+        print('I3')
+        global disableInput
+        disableInput = 'I3'
+        env.disable('I0')
+    def I4(self):
+        print('I4')
+        global disableInput
+        disableInput = 'I4'
+        env.disable('I0')
+
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.config_button = None
+        self.pack()
+        self.create_widgets()
+        self.poll()
+
+    def poll(self):
+        """
+        This method is required to allow the mainloop to receive keyboard
+        interrupts when the frame does not have the focus
+        """
+        self.master.after(250, self.poll)
+
 class Config(Frame):
     def create_widgets(self):
 
@@ -340,6 +654,8 @@ class TextBox(Frame):
         interrupts when the frame does not have the focus
         """
         self.master.after(250, self.poll)
+
+
 class Application(Frame):
 
     inputVal = 'I1'
@@ -349,17 +665,132 @@ class Application(Frame):
         self.status_button['fg'] = 'red'
         self.status_button['command'] = self.status
         self.status_button.pack({'side': 'left'})
+
         self.help_button = Button(self)
         self.help_button['text'] = 'HELP'
         self.help_button['fg'] = 'blue'
         self.help_button['command'] = self.help
         self.help_button.pack({'side': 'left'})
+
         self.config_button = Button(self)
         self.config_button['text'] = 'CONFIG'
         self.config_button['fg'] = 'green'
         self.config_button['command'] = self.config
         self.config_button.pack({'side': 'left'})
+
+        self.run_button = Button(self)
+        self.run_button['text'] = 'RUN'
+        self.run_button['fg'] = 'red'
+        self.run_button['command'] = self.run
+        self.run_button.pack({'side': 'left'})
+
+        self.copy_button = Button(self)
+        self.copy_button['text'] = 'COPY'
+        self.copy_button['fg'] = 'blue'
+        self.copy_button['command'] = self.copy
+        self.copy_button.pack({'side': 'left'})
+
+        self.copy_button = Button(self)
+        self.copy_button['text'] = 'CLEAR'
+        self.copy_button['fg'] = 'green'
+        self.copy_button['command'] = self.clear
+        self.copy_button.pack({'side': 'left'})
+
+        self.copy_button = Button(self)
+        self.copy_button['text'] = 'DISABLE'
+        self.copy_button['fg'] = 'red'
+        self.copy_button['command'] = self.disable
+        self.copy_button.pack({'side': 'left'})
+
+        self.sample_button = Button(self)
+        self.sample_button['text'] = 'SAMPLE'
+        self.sample_button['fg'] = 'blue'
+        self.sample_button['command'] = self.sample
+        self.sample_button.pack({'side': 'left'})
+
+        self.save_button = Button(self)
+        self.save_button['text'] = 'SAVE'
+        self.save_button['fg'] = 'red'
+        self.save_button['command'] = self.save
+        self.save_button.pack({'side': 'left'})
+
+        self.load_button = Button(self)
+        self.load_button['text'] = 'LOAD'
+        self.load_button['fg'] = 'green'
+        self.load_button['command'] = self.load
+        self.load_button.pack({'side': 'left'})
+
+    def save(self):
+        print('save')
+        root = tk.Tk()
+        title = tk.Label(root, text="Save as...",font=("Arial",18))
+        global textBox
+        textBox=Text(root, height=2, width=10)
+        title.pack()
+        textBox.pack()
+        buttonCommit=Button(root, height=1, width=10, text="Commit")
+        buttonCommit['command'] = self.retrive_input
+        buttonCommit.pack()
+    def load(self):
+        filename = filedialog.askopenfilename(filetypes = (("Template files", "*.tplate")
+                                                         ,("HTML files", "*.html;*.htm")
+                                                         ,("All files", "*.*") ))
         
+        print(os.path.basename(filename))
+        global loadFileName
+        loadFileName = os.path.basename(filename)
+        env.load('')
+
+    def retrive_input(self):
+        global inputValue
+        inputValue=textBox.get("1.0","end-1c")
+        print(inputValue)
+        env.save('')
+        #filename = filedialog.askopenfilename(filetypes = (("Template files", "*.tplate")
+         #                                                ,("HTML files", "*.html;*.htm")
+          #                                               ,("All files", "*.*") ))
+    def sample(self):
+        print('sample')
+        #app = inputBoxSample(master = Tk())
+        global sampleValue
+        sampleValue = '30'
+        env.sample()
+    def InputBox(self):        
+        dialog = tk.Toplevel(self.dialogroot)
+        dialog.width = 600
+        dialog.height = 100
+
+        frame = tk.Frame(dialog,  bg='#42c2f4', bd=5)
+        frame.place(relwidth=1, relheight=1)
+
+        entry = tk.Entry(frame, font=40)
+        entry.place(relwidth=0.65, rely=0.02, relheight=0.96)
+        entry.focus_set()
+
+        submit = tk.Button(frame, text='OK', font=16, command=lambda: self.DialogResult(entry.get()))
+        submit.place(relx=0.7, rely=0.02, relheight=0.96, relwidth=0.3)
+
+        root_name = self.dialogroot.winfo_pathname(self.dialogroot.winfo_id())
+        dialog_name = dialog.winfo_pathname(dialog.winfo_id())
+
+        # These two lines show a modal dialog
+        self.dialogroot.tk.eval('tk::PlaceWindow {0} widget {1}'.format(dialog_name, root_name))
+        self.dialogroot.mainloop()
+
+        #This line destroys the modal dialog after the user exits/accepts it
+        dialog.destroy()
+
+        #Print and return the inputbox result
+        print(self.strDialogResult)
+        return self.strDialogResult
+
+    def DialogResult(self, result):
+        self.strDialogResult = result
+        #This line quits from the MODAL STATE but doesn't close or destroy the modal dialog
+        self.dialogroot.quit()
+    def disable(self):
+        print('disable')
+        app = Disable(master=Tk())
     def status(self):
         print('status')
         env.status()
@@ -375,6 +806,16 @@ class Application(Frame):
 
         #env.config('I1')
         app = Config(master=Tk())
+    def run(self):
+        print('run')
+        env.run('2')
+
+    def copy(self):
+        print('copy')
+        app = Copy1(master=Tk())
+    def clear(self):
+        print('clear:')
+        app = Clear(master=Tk())
     
 
     def __init__(self, master=None):
@@ -431,14 +872,15 @@ class TestEnvironment:
         io.configure(args[1:])
 
     def disable(self, args):
-
-        if len(args) == 0:
-            io = Interface.select_signal(self, 'IO: ', signal_name=args[0] if len(args) > 0 else None)
-            io.configure(('disabled', ))
-        else:
-            for io_name in args:
-                io = IO.get(self, io_name)
-                io.configure(('disabled', ))
+        io = IO.get(self, disableInput)
+        io.disable()
+        # if len(args) == 0:
+        #     io = Interface.select_signal(self, 'IO: ', signal_name=args[0] if len(args) > 0 else None)
+        #     io.configure(('disabled', ))
+        # else:
+        #     for io_name in args:
+        #         io = IO.get(self, io_name)
+        #         io.configure(('disabled', ))
 
     def show_help(self, args=[]):
         print(HELP_MESSAGE.format(', '.join(args)))
@@ -457,7 +899,7 @@ class TestEnvironment:
         if args:
             filepath = args[0]
         else:
-            filepath = input('File path: ')
+            filepath = loadFileName
 
         print(filepath)
 
@@ -565,24 +1007,26 @@ class TestEnvironment:
                 print('Cannot plot IO with undefined signal')
 
     def sample(self, args=[]):
-        if len(args) == 1:
-            self.global_sample_rate = parse_rate(args[0])
+        if(sampleValue != -1):
+        # if len(args) == 1:
+            self.global_sample_rate = parse_rate(sampleValue)
 
-        if len(args) == 0 or self.global_sample_rate is None:
-            self.global_sample_rate = input_rate('Set sample rate: ')
+        # if len(args) == 0 or self.global_sample_rate is None:
+        #     self.global_sample_rate = input_rate('Set sample rate: ')
 
     def save(self, args):
         if args:
             filepath = args[0]
 
-        elif self.profile_path is not None:
-            if prompt_yesno('Profile was loaded from {}. Overwrite? '.format(self.profile_path)):
-                filepath = self.profile_path
-            else:
-                filepath = input('File path: ')
+        # elif self.profile_path is not None:
+        #     if prompt_yesno('Profile was loaded from {}. Overwrite? '.format(self.profile_path)):
+        #         filepath = self.profile_path
+        #     else:
+        #         filepath = inputValue
+        #         #filepath = input('File path: ')
 
         else:
-            filepath = input('File path: ')
+            filepath = inputValue
 
         backup_pd = self.playback_device
         self.playback_device = None
@@ -604,7 +1048,7 @@ class TestEnvironment:
         if args:
             filepath = args[0]
         else:
-            filepath = input('File path: ')
+            filepath = loadFileName
 
         with open(filepath, 'rb') as f:
             loaded_env = pickle.load(f)
@@ -699,8 +1143,14 @@ class TestEnvironment:
             io.signal.sample_rate = rate
 
     def copy(self, args):
-        io1 = Interface.select_signal(self, 'From IO: ', signal_name=args[0] if len(args) > 0 else None)
-        io2 = Interface.select_signal(self, 'To IO: ', signal_name=args[1] if len(args) > 1 else None)
+        # copyInput is not '' and toInput is not '':
+        print(copyInput)
+        print(toInput)
+        io1 = IO.get(env, copyInput)
+        io2 = IO.get(env, toInput)
+        #else:
+        #    io1 = Interface.select_signal(self, 'From IO: ', signal_name=args[0] if len(args) > 0 else None)
+        #    io2 = Interface.select_signal(self, 'To IO: ', signal_name=args[1] if len(args) > 1 else None)
 
         io2.mode = io1.mode
 
@@ -712,7 +1162,10 @@ class TestEnvironment:
             io2.signal = io1.signal.clone()
 
     def clear(self, args):
-        io = Interface.select_signal(self, 'IO: ', signal_name=args[0] if len(args) > 0 else None)
+        #io = Interface.select_signal(self, 'IO: ', signal_name=args[0] if len(args) > 0 else None)
+        global clearIO
+        io = IO.get(env,clearIO)
+        print(clearIO)
         io.signal = None
 
 #Parsing input
@@ -744,8 +1197,7 @@ def input_int(*args):
 
 
 def main():
-
-    
+    sampleValue = -1
     #env = TestEnvironment()
     
     commands = {
