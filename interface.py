@@ -88,6 +88,15 @@ class Interface:
         else:
             return signal.RS232Signal(message, baud_rate)
 
+    @staticmethod
+    def build_signal_can(sample_rate, force_sample_rate=False):
+        baud_rate = input_int('Baud rate: ')
+        message = bytes(input('Data: '), "utf-8").decode("unicode_escape") # Parse \n as an actual newline, etc. 
+        if force_sample_rate:
+            return signal.CANSignal(message, baud_rate, sample_rate=sample_rate)
+        else:
+            return signal.CANSignal(message, baud_rate)
+
     # TODO: implement "bitstream" mode that takes a series of 0's and 1's from the user, to be directly used as samples
     #@staticmethod
     #def build_signal_bitstream(env):
@@ -98,7 +107,8 @@ class Interface:
             'clock': cls.build_signal_clock,
             'pulse': cls.build_signal_pulse,
             'level': cls.build_signal_level,
-            'rs232': cls.build_signal_rs232
+            'rs232': cls.build_signal_rs232,
+            'can': cls.build_signal_can
         }
 
         _, builder_name = cls.menu_choice(list(signal_builders.keys()), prompt='Signal type: ', title='Signal types:')
