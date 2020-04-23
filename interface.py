@@ -44,6 +44,7 @@ Behavior Model: {}'''
 cmd = ' '
 global clearIO
 global sampleValue
+global inputConfig
 class Interface:
     @staticmethod
     def build_signal_clock(sample_rate, force_sample_rate=False): #Sample rate, duty cycle, 
@@ -93,8 +94,12 @@ class Interface:
         baud_rate = input_int('Baud rate: ')
         message = bytes(input('Data: '), "utf-8").decode("unicode_escape") # Parse \n as an actual newline, etc. 
         if force_sample_rate:
+            print(type(message))
+            print(type(baud_rate))
             return signal.CANSignal(message, baud_rate, sample_rate=sample_rate)
         else:
+            print(type(message))
+            print(type(baud_rate))
             return signal.CANSignal(message, baud_rate)
 
     # TODO: implement "bitstream" mode that takes a series of 0's and 1's from the user, to be directly used as samples
@@ -129,7 +134,7 @@ class Interface:
 
         return io
 
-    @staticmethod
+    @staticmethod   
     def menu_choice(items, prompt='Choice: ', title=None, seperator='\n', render_item=lambda x: x): #Creates menu. Can take in multiple types of menus
         if title is not None:
             print(title)
@@ -200,6 +205,12 @@ class IO: #Input output interface
         self.config_disable()
         print('{}{} configured: {}'.format(self.abbrev, self.index, self.status()))
 
+    def set_signal(self):
+        self.signal = can_signal
+
+    def set_enable(self):
+        self.mode = 'enabled'
+
     def config_enable(self):
         raise NotImplementedError('Not implemented in abstract class')
 
@@ -219,6 +230,9 @@ class Input(IO):
 
     def config_enable(self):
         self.signal = Interface.build_signal(self.env.global_sample_rate)
+
+    
+
         
 #Calls IO interface
 class Output(IO): 
@@ -588,53 +602,135 @@ class Disable(Frame):
         """
         self.master.after(250, self.poll)
 
-class Config(Frame):
+class TextBox:
     def create_widgets(self):
+        root = tk.Tk()
+        title = tk.Label(root, text="Signal Types:",font=("Arial",18))
+        clock = tk.Label(root, text="Clock [0]",font=("Arial",12))
+        pulse = tk.Label(root, text="Pulse [1]",font=("Arial",12))
+        level = tk.Label(root, text="Level [2]",font=("Arial",12))
+        rs232 = tk.Label(root, text="RS232 [3]",font=("Arial",12))
+        can = tk.Label(root, text="CAN [4]",font=("Arial",12))
+        select = tk.Label(root, text="Signal Type:",font=("Arial",18))
+        frame = tk.Frame(master=root, width = 500, bg = 'black')
+        frame.pack()
+        global textBoxConfig
+        textBoxConfig=Text(root, height=1, width=5)
+        title.pack()
+        clock.pack()
+        pulse.pack()
+        level.pack()
+        rs232.pack()
+        can.pack()
+        select.pack()
+        textBoxConfig.pack()
+        buttonCommit=Button(root, height=1, width=10, text="Commit")
+        buttonCommit['command'] = self.retrieve_input
+        buttonCommit.pack()
 
-        self.config_button_1 = Button(self)
-        self.config_button_2 = Button(self)
-        self.config_button_3 = Button(self)
-        self.config_button_4 = Button(self)
+    def retrieve_input(self):
+        switcher = {
+            '0':'clock',
+            '1':'pulse',
+            '2':'level',
+            '3':'rs232',
+            '4':'can'
+        }
+        if switcher.get(textBoxConfig.get("1.0","end-1c"),"Invalid") == 'can':
+            app = Can()
+        elif switcher.get(textBoxConfig.get("1.0","end-1c"),"Invalid") == 'rs232':
+            app = RS232()
+        else:
+            print(switcher.get(textBoxConfig.get("1.0","end-1c"),"Invalid"))
 
-        self.config_button_1['text'] = 'CONFIG1'
-        self.config_button_1['fg'] = 'green'
-        self.config_button_1['command'] = self.config1
-        self.config_button_1.pack({'side': 'left'})
-
-        self.config_button_2['text'] = 'CONFIG2'
-        self.config_button_2['fg'] = 'green'
-        self.config_button_2['command'] = self.config2
-        self.config_button_2.pack({'side': 'left'})
-
-        self.config_button_3['text'] = 'CONFIG3'
-        self.config_button_3['fg'] = 'green'
-        self.config_button_3['command'] = self.config3
-        self.config_button_3.pack({'side': 'left'})
-
-        self.config_button_4['text'] = 'CONFIG4'
-        self.config_button_4['fg'] = 'green'
-        self.config_button_4['command'] = self.config4
-        self.config_button_4.pack({'side': 'left'})
-
-    def config1(self):
-        print('I0')
-        app = TextBox(master=Tk())
-    def config2(self):
-        print('I1')
-        app = TextBox(master=Tk())
-    def config3(self):
-        print('I2')
-        app = TextBox(master=Tk())
-    def config4(self):
-        print('I3')
-        app = TextBox(master=Tk())
 
     def __init__(self, master=None):
-        Frame.__init__(self, master)
-        self.config_button = None
-        self.pack()
         self.create_widgets()
-        self.poll()
+
+
+class Can:
+    def create_widgets(self):
+        root = tk.Tk()
+        global textBoxData
+        global textBoxBaud
+        global textBoxInput
+        frame = tk.Frame(master=root, width = 500, bg = 'black')
+        frame.pack()
+        title = tk.Label(root, text="CAN",font=("Arial",18))
+        inputConfig = tk.Label(root, text="Input:",font=("Arial",12))
+        textBoxInput=Text(root, height=1, width=5)
+        baud = tk.Label(root, text="Baud:",font=("Arial",12))
+        textBoxBaud=Text(root, height=1, width=5)
+        data = tk.Label(root, text="Data:",font=("Arial",12))
+        textBoxData=Text(root, height=1, width=5)
+        title.pack()
+        inputConfig.pack()
+        textBoxInput.pack()
+        baud.pack()
+        textBoxBaud.pack()
+        data.pack()
+        textBoxData.pack()
+        buttonCommit=Button(root, height=1, width=10, text="Commit")
+        buttonCommit['command'] = self.retrieve_input
+        buttonCommit.pack()
+
+    def retrieve_input(self):
+        print(textBoxInput.get("1.0","end-1c"))
+        print(textBoxBaud.get("1.0","end-1c"))
+        print(textBoxData.get("1.0","end-1c"))
+        global can_signal
+        global input_sig
+        can_signal = signal.CANSignal(textBoxData.get("1.0","end-1c"), (int(textBoxBaud.get("1.0","end-1c"))))
+        print(textBoxInput.get("1.0","end-1c"))
+        input_sig = textBoxInput.get("1.0", "end-1c")
+        env.configGui(textBoxInput.get("1.0","end-1c"))
+
+
+
+    def __init__(self, master=None):
+
+        self.create_widgets()
+
+
+class RS232:
+    def create_widgets(self):
+        root = tk.Tk()
+        title = tk.Label(root, text="Clock",font=("Arial",18))
+        clock = tk.Label(root, text="Clock [0]",font=("Arial",12))
+        pulse = tk.Label(root, text="Pulse [1]",font=("Arial",12))
+        level = tk.Label(root, text="Level [2]",font=("Arial",12))
+        rs232 = tk.Label(root, text="RS232 [3]",font=("Arial",12))
+        can = tk.Label(root, text="Can [4]",font=("Arial",12))
+        select = tk.Label(root, text="Signal Type:",font=("Arial",18))
+        global textBoxConfig
+        textBoxConfig=Text(root, height=1, width=5)
+        title.pack()
+        clock.pack()
+        pulse.pack()
+        level.pack()
+        rs232.pack()
+        can.pack()
+        select.pack()
+        textBoxConfig.pack()
+        buttonCommit=Button(root, height=1, width=10, text="Commit")
+        buttonCommit['command'] = self.retrieve_input
+        buttonCommit.pack()
+
+    def retrieve_input(self):
+        switcher = {
+            '0':'clock',
+            '1':'pulse',
+            '2':'level',
+            '3':'rs232',
+            '4':'can'
+        }
+        print(switcher.get(textBoxConfig.get("1.0","end-1c"),"Invalid"))
+        
+
+
+    def __init__(self, master=None):
+        
+        self.create_widgets()
 
     def poll(self):
         """
@@ -642,29 +738,6 @@ class Config(Frame):
         interrupts when the frame does not have the focus
         """
         self.master.after(250, self.poll)
-class TextBox(Frame):
-    def create_widgets(self):
-        win = Tk()
-        win.title("CAERUS CNC")
-        tab_control = ttk.Notebook(win)
-        tab2 = ttk.Frame(tab_control)
-        self.scrTxt = scrolledtext.ScrolledText(tab2,width=40,height=10)
-
-
-    def __init__(self, master=None):
-        Frame.__init__(self, master)
-        self.master.minsize(width=400, height=240)
-        self.pack()
-        self.create_widgets()
-        self.poll()
-
-    def poll(self):
-        """
-        This method is required to allow the mainloop to receive keyboard
-        interrupts when the frame does not have the focus
-        """
-        self.master.after(250, self.poll)
-
 
 class Application(Frame):
 
@@ -687,12 +760,6 @@ class Application(Frame):
         self.config_button['fg'] = 'green'
         self.config_button['command'] = self.config
         self.config_button.pack({'side': 'left'})
-
-        self.run_button = Button(self)
-        self.run_button['text'] = 'RUN'
-        self.run_button['fg'] = 'red'
-        self.run_button['command'] = self.run
-        self.run_button.pack({'side': 'left'})
 
         self.copy_button = Button(self)
         self.copy_button['text'] = 'COPY'
@@ -739,7 +806,7 @@ class Application(Frame):
         title.pack()
         textBox.pack()
         buttonCommit=Button(root, height=1, width=10, text="Commit")
-        buttonCommit['command'] = self.retrive_input
+        buttonCommit['command'] = self.retrieve_input
         buttonCommit.pack()
     def load(self):
         filename = filedialog.askopenfilename(filetypes = (("Template files", "*.tplate")
@@ -751,20 +818,37 @@ class Application(Frame):
         loadFileName = os.path.basename(filename)
         env.load('')
 
-    def retrive_input(self):
+    def retrieve_input(self):
         global inputValue
         inputValue=textBox.get("1.0","end-1c")
         print(inputValue)
         env.save('')
-        #filename = filedialog.askopenfilename(filetypes = (("Template files", "*.tplate")
-         #                                                ,("HTML files", "*.html;*.htm")
-          #                                               ,("All files", "*.*") ))
+    
+
     def sample(self):
         print('sample')
+        root = tk.Tk()
+        global textBoxSample
+        frame = tk.Frame(master=root, width = 500, bg = 'black')
+        frame.pack()
+        title = tk.Label(root, text="Set Sample Rate",font=("Arial",18))
+        title.pack()
+        textBoxSample=Text(root, height=1, width=5)
+        textBoxSample.pack()
+        buttonCommit=Button(root, height=1, width=10, text="Commit")
+        buttonCommit['command'] = self.retrieve_sample
+        buttonCommit.pack()
         #app = inputBoxSample(master = Tk())
+        # global sampleValue
+        # sampleValue = '30'
+        # env.sample()
+
+    def retrieve_sample(self):
         global sampleValue
-        sampleValue = '30'
+        sampleValue= textBoxSample.get("1.0", "end-1c")
+        print("Sample Rate: %s" % sampleValue)
         env.sample()
+
     def InputBox(self):        
         dialog = tk.Toplevel(self.dialogroot)
         dialog.width = 600
@@ -815,10 +899,7 @@ class Application(Frame):
         #while flag == 1: 
 
         #env.config('I1')
-        app = Config(master=Tk())
-    def run(self):
-        print('run')
-        env.run('2')
+        app = TextBox()
 
     def copy(self):
         print('copy')
@@ -878,8 +959,14 @@ class TestEnvironment:
         print(STATUS_MESSAGE.format(*field_values))
 
     def config(self, args):
+        # io = Interface.select_signal(self, 'IO: ', signal_name=input_sig)
         io = Interface.select_signal(self, 'IO: ', signal_name=args[0] if len(args) > 0 else None)
+        # io.set_signal()
         io.configure(args[1:])
+    def configGui(self,arg):
+        io = Interface.select_signal(self, 'IO: ', signal_name=input_sig)
+        io.set_enable()
+        io.set_signal()
 
     def disable(self, args):
         io = IO.get(self, disableInput)
@@ -1088,6 +1175,7 @@ class TestEnvironment:
     def get_io(self, *args):
         return IO.get(self, *args)
 
+
     def record(self, *args):
         channels = [o.index-1 for o in self.outputs if o.enabled]
         if len(channels) == 0:
@@ -1178,6 +1266,11 @@ class TestEnvironment:
         print(clearIO)
         io.signal = None
 
+    def gui(self, args):
+        root = Tk()
+        app = Application(master=root)
+
+
 #Parsing input
 def parse_io_name(name):
     if len(name) == 0:
@@ -1227,7 +1320,8 @@ def main():
         'record': env.record,
         'copy': env.copy,
         'edit': env.edit,
-        'clear': env.clear
+        'clear': env.clear,
+        'gui': env.gui
     }
 
     if len(sys.argv) >= 2 and os.path.exists(sys.argv[1]): #Checking for all arguments entered and for valid arguments
@@ -1238,8 +1332,7 @@ def main():
         env.show_help(commands.keys())
         print('')
         env.status()
-    root = Tk()
-    app = Application(master=root)
+    
     print('')
     # p=Popen(["./sample.sh"],stdin=PIPE)
     # cmd, *args = raw_input()
@@ -1323,5 +1416,6 @@ commands = {
         'record': env.record,
         'copy': env.copy,
         'edit': env.edit,
-        'clear': env.clear
+        'clear': env.clear,
+        'gui': env.gui
         }
